@@ -91,4 +91,23 @@ class OfficerController extends Controller
     {
         //
     }
+
+    public function deleteOfficer($id){
+        $data = DB::table('officers')->where('id_petugas', $id)->delete();
+        return response()->json($data, 201);
+    }
+
+    public function getData(){
+        $user = DB::table('people')->count();
+        $petugas = DB::table('officers')->count();
+        $belum_diverifikasi = DB::table('complaints')->where("status", "0")->count();
+
+         $response = [
+             "user" => $user,
+             "petugas" => $petugas,
+            "belum_diverifikasi" => $belum_diverifikasi,
+        ];
+
+        return response()->json($response, 201);
+    }
 }

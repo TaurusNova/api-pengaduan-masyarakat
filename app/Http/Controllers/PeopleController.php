@@ -58,6 +58,23 @@ class PeopleController extends Controller
         return response()->json($response, 201);
     }
 
+    public function profilePeople($username){
+        $data = DB::table('people')->where('username', $username)->first();
+
+        if($data){
+            $response = [
+                "nama" => $data->nama,
+                "nik" => $data->nik,
+                "telp" => $data->telp,
+            ];
+
+            return response()->json($response, 201);
+        }else{
+            return response()->json("Data Tidak Ada", 400);
+        }
+
+    }
+
 
     /**
      * Update the specified resource in storage.
@@ -66,9 +83,25 @@ class PeopleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $nik)
     {
-        //
+        $fields = $request->validate([
+            'nama' => 'required|string',
+            'username' => 'required|string|unique:people,username',
+            'telp' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|between:8,14'
+        ]);
+
+        $data = DB::table('people')
+                        ->where('nik', $nik)
+                        ->update(['nama' => $fields["nama"], "username" => $fields["username"], "telp" => $fields["telp"]]);
+            $response = [
+                "message" => "Berhasil Update",
+                "username" => $fields['username'],
+                "data" => $data
+            ];
+
+            return response()->json($response, 201);
+
     }
 
     /**

@@ -24,6 +24,24 @@ class ComplaintController extends Controller
         return response()->json($response, 201);
     }
 
+    public function searchPeopleComplaint(Request $request){
+
+        $fields = json_decode($request->getContent(), true);
+
+        $keyword = $fields["cari"];
+        $nik = $fields["nik"];
+
+        $data = DB::table('complaints')->where("complaint_deleted", "not_deleted")->where("nik", $nik)->where('judul_laporan', 'like', "$keyword%")->get();
+
+        $response = [
+            "message" => "Berhasil Dapat Data",
+            "data" => $data,
+            "cari" => $keyword
+        ];
+
+        return response()->json($response, 201);
+    }
+
     public function showPeopleComplaints($nik){
         $complaints = DB::table('complaints')->where("nik", $nik)->get();
         $response = [
@@ -185,7 +203,25 @@ class ComplaintController extends Controller
     public function show($id)
     {
         $data_pengaduan = DB::table('complaints')->where('id_pengaduan', $id)->get();
-        $data_tanggapan = DB::table('responses')->where('id_pengaduan', $id)->get();
+        $data_tanggapan = DB::table('responses')
+                            ->join('officers', 'responses.id_petugas', '=', 'officers.id_petugas')
+                            ->select('responses.*', 'officers.nama_petugas')
+                            ->where('id_pengaduan', $id)->where("response_deleted", "not_deleted")->get();
+
+        $response = [
+            'data_pengaduan' => $data_pengaduan,
+            'data_tanggapan' => $data_tanggapan
+        ];
+
+        return response()->json($response, 201);
+    }
+
+    public function showPeopleDetailComplaint($id){
+        $data_pengaduan = DB::table('complaints')->where('id_pengaduan', $id)->where("complaint_deleted", "not_deleted")->get();
+        $data_tanggapan = DB::table('responses')
+                            ->join('officers', 'responses.id_petugas', '=', 'officers.id_petugas')
+                            ->select('responses.*', 'officers.nama_petugas')
+                            ->where('id_pengaduan', $id)->where("response_deleted", "not_deleted")->get();
 
         $response = [
             'data_pengaduan' => $data_pengaduan,
@@ -204,15 +240,91 @@ class ComplaintController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $fields = $request->validate([
+            'judul_laporan' => 'required',
+            'isi_laporan' => 'required',
+            'tipe' => 'required',
+            'provinsi' => 'required',
+            'kota' => 'required',
+            'kecamatan' => 'required',
+            'tanggal_kejadian' => ""
+        ]);
+
+        $tipe = "";
+        if($fields['tipe'] === "PENGADUAN"){
+            $tipe = "pengaduan";
+        }elseif($fields["tipe"] === "KRITIK & SARAN"){
+            $tipe = "kritik_saran";
+        }elseif ($fields["tipe"] === "PERTANYAAN") {
+            $tipe = "pertanyaan";
+        }
+
+             $affected = DB::table('complaints')
+              ->where('id_pengaduan', $id)
+              ->update([
+                'judul_laporan' => $fields['judul_laporan'],
+                'isi_laporan' => $fields['isi_laporan'],
+                'tipe' => $tipe,
+                'provinsi_kejadian' => $fields['provinsi'],
+                'kota_kejadian' => $fields['kota'],
+                'kecamatan_kejadian' => $fields['kecamatan'],
+                'tanggal_kejadian' => $fields['tanggal_kejadian'],
+            ]);
+
+
+        $response = [
+            'data' => $affected,
+            'message' => 'Laporan berhasil di create!'
+        ];
+
+        return response()->json($response, 201);
     }
 
     public function userDelete(Request $request, $id){
-        DB::select('exec userDeleteComplaint(?)', array($id));
+        $data = DB::table('complaints')->where('id_pengaduan', $id)->delete();
+        return response()->json($data, 201);
     }
 
     public function officerDelete(Request $request, $id){
-        DB::select('exec officerDeleteComplaint(?)', array($id));
+        DB::select('call officerDeleteComplaint(?)', array($id));
+    }
+
+    public function showPeopleProcessComplaint($nik) {
+        $data = DB::table('complaints')->where("nik", $nik)->where("status", "proses")->get();
+
+        $response = [
+            "data" => $data,
+            "message" => "Berhasil Dapatkan Data"
+        ];
+
+        return response()->json($response, 201);
+    }
+
+    public function showPeopleDoneComplaint($nik){
+        $data = DB::table('complaints')->where("nik", $nik)->where("status", "selesai")->get();
+
+        $response = [
+            "data" => $data,
+            "message" => "Berhasil Dapatkan Data"
+        ];
+
+        return response()->json($response, 201);
+    }
+
+    public function getDataHome(){
+        $proses = Complaint::where('status', "proses")->count();
+        $selesai = Complaint::where('status', 'selesai')->count();
+        $belum_diverifikasi = Complaint::where('status', '0')->count();
+        $semua = DB::table('complaints')->count();
+
+        $response = [
+            "semua" => $semua,
+            "proses" => $proses,
+            "selesai" => $selesai,
+            "belum_diverifikasi" => $belum_diverifikasi,
+        ];
+
+        return response()->json($response, 201);
     }
 
     /**

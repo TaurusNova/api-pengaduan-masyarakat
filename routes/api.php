@@ -24,20 +24,26 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
+Route::get('/home/get_data', [ComplaintController::class, 'getDataHome']);
+
 // Auth
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 // Admin
 Route::post('/admin/register_petugas', [AuthController::class, 'registerPetugas']);
+Route::post('/admin/delete_officer/{id}', [OfficerController::class, 'deleteOfficer']);
+Route::get('/admin/get_data/', [OfficerController::class, 'getData']);
 Route::post('/admin/delete_complaint', [ComplaintController::class, '']);
 Route::post('/admin/delete_response', [ResponseController::class, '']);
 Route::post('/admin/report/date', [ReportController::class, 'showDate']);
 
-// Show Peoples
+// Peoples
 Route::get('/peoples', [PeopleController::class, 'index']);
 Route::get('/show_people/{nik}', [PeopleController::class, 'show']);
+Route::get('/people_profile/{username}', [PeopleController::class, 'profilePeople']);
 Route::get('/search_people/{keyword}', [PeopleController::class, 'search']);
+Route::post('/update_people/{nik}', [PeopleController::class, 'update']);
 
 // Show Officers
 Route::get('/officers', [OfficerController::class, 'index']);
@@ -48,6 +54,11 @@ Route::get('/search_officer/{keyword}', [OfficerController::class, 'search']);
 Route::get('/complaints', [ComplaintController::class, 'index']);
 Route::post('/create_complaint', [ComplaintController::class, 'store']);
 Route::get('/complaint/{id}', [ComplaintController::class, 'show']);
+Route::post('/people/search_complaint/', [ComplaintController::class, 'searchPeopleComplaint']);
+Route::get('/people/complaint/{id}', [ComplaintController::class, 'showPeopleDetailComplaint']);
+Route::get('/people/process_complaints/{nik}', [ComplaintController::class, 'showPeopleProcessComplaint']);
+Route::get('/people/done_complaints/{nik}', [ComplaintController::class, 'showPeopleDoneComplaint']);
+Route::post('/people/update_complaint/{id}', [ComplaintController::class, 'update']);
 // People Route
 Route::get('/people/complaints/{nik}', [ComplaintController::class, 'showPeopleComplaints']);
 // Officer Route
@@ -68,9 +79,6 @@ Route::get('/response/{id}', [ResponseController::class, 'show']);
 Route::post('/create_response/{id}', [ResponseController::class, 'store']);
 Route::post('/update_response/{id}', [ResponseController::class, 'update']);
 Route::post('/delete_response', [ResponseController::class, '']);
-
-// Reports
-Route::get('/report', [ReportController::class, '']);
 
 // Progress
 // Verify, Show People by NIK, Search People, Show Officer by ID, Search Officer, Create Response, Update Response

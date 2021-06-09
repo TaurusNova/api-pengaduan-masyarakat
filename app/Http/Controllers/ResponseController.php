@@ -47,7 +47,7 @@ class ResponseController extends Controller
                 'tgl_tanggapan' => date("Y-m-d"),
                 'tanggapan' => $fields['tanggapan'],
                 'id_petugas' => $fields['id_petugas'],
-                'reponse_deleted' => "not_deleted"
+                'response_deleted' => "not_deleted"
             ]);
 
             $response = [
